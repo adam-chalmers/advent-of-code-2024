@@ -23,3 +23,5 @@ If you want to use scripts (see below) to initialise new days and pull inputs au
 - `--example` - if given, will run against the input in that day's `example.txt`. If omitted, will run against `input.txt` instead.
 
 For example, run `yarn day -p 1 --example` to run your code for the latest day's part 1, using the example input.
+
+The command will print the answer as returned by your code, as well as tell you how long it took to run.
