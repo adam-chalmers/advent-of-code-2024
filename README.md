@@ -2,7 +2,7 @@
 
 ## Setup
 
-Written using node 22 and built to use yarn 4. Simply run `yarn` (use `corepack enable` first if you haven't already) to setup.
+Written using node 22 and built to use yarn 4. Simply run `yarn` (use `corepack enable` first if you haven't already) to setup. No TypeScript building should be necessary as all code runs using `ts-node` (using swc as a compiler for speed).
 
 If you want to use scripts (see below) to initialise new days and pull inputs automatically:
 1. Create a new, empty file in the root of this repository named `.token`.
