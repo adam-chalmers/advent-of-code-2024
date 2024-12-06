@@ -13,12 +13,19 @@ const parser = yargs(hideBin(process.argv))
     requiresArg: true,
     demandOption: true,
   })
+  .option("day", {
+    alias: "d",
+    type: "number",
+    description: "The day to run. If omitted, defaults to latest day",
+    requiresArg: false,
+    demandOption: false,
+  })
   .option("example", {
     boolean: true,
     default: false,
   });
 
-const getLatestDay = () => {
+const getDay = (day?: number) => {
   const src = __dirname;
   const folders = fs
     .readdirSync(src)
@@ -26,7 +33,7 @@ const getLatestDay = () => {
       (x) => x.startsWith("day") && fs.statSync(path.join(src, x)).isDirectory()
     );
 
-  const dayNumber = getDayNumber();
+  const dayNumber = day ?? getDayNumber();
   if (folders.find((x) => x === `day${dayNumber}`)) {
     return {
       filePath: path.join(src, `day${dayNumber}/main.ts`),
@@ -44,14 +51,14 @@ const getLatestDay = () => {
 };
 
 const main = async () => {
-  const { example, part } = await parser.parse();
+  const { example, part, day } = await parser.parse();
   if (part !== 1 && part !== 2) {
     console.error(`Invalid part entered: ${part}`);
     process.exitCode = 1;
     return;
   }
 
-  const { filePath, className } = getLatestDay();
+  const { filePath, className } = getDay(day);
   const imported = await import(filePath);
   const DayClass = imported[className] as new () => Day;
 

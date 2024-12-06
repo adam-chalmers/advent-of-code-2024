@@ -18,10 +18,11 @@ If you want to use scripts (see below) to initialise new days and pull inputs au
 
 ### Day
 
-`yarn day` will run the code for the current day. There are two arguments (you can also run `yarn day --help` to see this in your terminal):
-- `-p` or `--part` - either 1 or 2, and denotes which part of the day's challenge you want to run
+`yarn day` will run the code for a day. There are one to three arguments (you can also run `yarn day --help` to see this in your terminal):
+- `-p` or `--part` - either 1 or 2, and denotes which part of the day's challenge you want to run.
+- `-d` or `--day` - if given, will run the specific day. If omitted, will run the latest available day.
 - `--example` - if given, will run against the input in that day's `example.txt`. If omitted, will run against `input.txt` instead.
 
-For example, run `yarn day -p 1 --example` to run your code for the latest day's part 1, using the example input.
+For example, run `yarn day -p 1 -d 3 --example` to run your code for day 3's part 1, using the example input.
 
 The command will print the answer as returned by your code, as well as tell you how long it took to run.
