@@ -1,6 +1,5 @@
 import { Day } from "../common/day";
-
-type Coord = [x: number, y: number];
+import { Coord, Grid } from "../common/grid";
 
 const Headings = {
   UP: "^",
@@ -61,11 +60,11 @@ export class Day6 extends Day {
   }
 
   private walk(
-    grid: string[][],
+    grid: Grid,
     guardCoords: Coord,
     visited: Map<number, Map<number, Set<Heading>>>
   ): WalkResult {
-    const heading = grid[guardCoords[1]][guardCoords[0]];
+    const heading = grid.get(guardCoords);
     let newCoords: Coord;
     if (heading === Headings.UP)
       newCoords = [guardCoords[0], guardCoords[1] + 1];
@@ -80,14 +79,13 @@ export class Day6 extends Day {
         `Guard is not at position! (${guardCoords[0]}, ${guardCoords[1]})`
       );
 
-    grid[guardCoords[1]][guardCoords[0]] = ".";
-    const charAtNewCoords: string | undefined =
-      grid[newCoords[1]]?.[newCoords[0]];
+    grid.set(guardCoords, ".");
+    const charAtNewCoords = grid.tryGet(newCoords);
     if (!charAtNewCoords) return { newCoords: null, result: Results.Complete };
 
     if (charAtNewCoords === "#") {
       const newHeading = this.rotate(heading);
-      grid[guardCoords[1]][guardCoords[0]] = newHeading;
+      grid.set(guardCoords, newHeading);
       if (visited.get(guardCoords[0])?.get(guardCoords[1])?.has(newHeading)) {
         return { newCoords, result: Results.Loop };
       }
@@ -100,7 +98,7 @@ export class Day6 extends Day {
       throw new Error(`Unexpected grid value: ${charAtNewCoords}`);
     }
 
-    grid[newCoords[1]][newCoords[0]] = heading;
+    grid.set(newCoords, heading);
 
     if (visited.get(newCoords[0])?.get(newCoords[1])?.has(heading)) {
       return { newCoords, result: Results.Loop };
@@ -110,11 +108,10 @@ export class Day6 extends Day {
     return { newCoords, result: Results.InProgress };
   }
 
-  private findGuard(grid: string[][]): Coord {
-    for (let y = 0; y < grid.length; y++) {
-      const row = grid[y];
-      for (let x = 0; x < row.length; x++) {
-        const char = row[x];
+  private findGuard(grid: Grid): Coord {
+    for (let y = 0; y < grid.height; y++) {
+      for (let x = 0; x < grid.width; x++) {
+        const char = grid.get(x, y);
         if ((Object.values(Headings) as string[]).includes(char)) {
           return [x, y];
         }
@@ -124,19 +121,12 @@ export class Day6 extends Day {
     throw new Error("Could not find guard!");
   }
 
-  private print(grid: string[][]) {
-    for (let y = grid.length - 1; y >= 0; y--) {
-      console.log(grid[y].join(""));
-    }
-    console.log(" ");
-  }
-
-  private doTheThing(
+  private walkUntilDone(
     visited: Map<number, Map<number, Set<Heading>>>,
-    grid: string[][],
+    grid: Grid,
     guardCoords: Coord
   ) {
-    // this.print(grid);
+    // grid.print();
     let result: Result = Results.InProgress;
     while (result === Results.InProgress) {
       const walkResult = this.walk(grid, guardCoords, visited);
@@ -144,36 +134,29 @@ export class Day6 extends Day {
 
       if (walkResult.result !== Results.InProgress) break;
       guardCoords = walkResult.newCoords;
-      // this.print(grid);
+      // grid.print();
     }
 
     return result;
   }
 
   private formsLoop(
-    grid: string[][],
+    grid: Grid,
     obstacleCoord: Coord,
     guardCoord: Coord
   ): boolean {
-    grid[obstacleCoord[1]][obstacleCoord[0]] = "#";
+    grid.set(obstacleCoord, "#");
 
     const visited = new Map<number, Map<number, Set<Heading>>>();
-    return this.doTheThing(visited, grid, guardCoord) === Results.Loop;
-  }
-
-  private cloneGrid(grid: string[][]) {
-    return [...grid.map((x) => [...x])];
+    return this.walkUntilDone(visited, grid, guardCoord) === Results.Loop;
   }
 
   protected override part1(input: string): string {
-    const grid = input
-      .split("\n")
-      .map((x) => x.split(""))
-      .reverse();
+    const grid = Grid.fromInput({ input });
 
     let guardCoords = this.findGuard(grid);
     const visited = new Map<number, Map<number, Set<Heading>>>();
-    this.doTheThing(visited, grid, guardCoords);
+    this.walkUntilDone(visited, grid, guardCoords);
 
     return Array.from(visited.values())
       .reduce((acc, curr) => acc + curr.size, 0)
@@ -181,24 +164,21 @@ export class Day6 extends Day {
   }
 
   protected override part2(input: string): string {
-    const grid = input
-      .split("\n")
-      .map((x) => x.split(""))
-      .reverse();
-    this.print(grid);
+    const grid = Grid.fromInput({ input });
 
     const guardCoord = this.findGuard(grid);
 
     let numLoops = 0;
-    for (let y = 0; y < grid.length; y++) {
-      const row = grid[y];
-      for (let x = 0; x < row.length; x++) {
-        if ((x === guardCoord[0] && y === guardCoord[1]) || grid[y][x] === "#")
+    for (let y = 0; y < grid.height; y++) {
+      for (let x = 0; x < grid.width; x++) {
+        if (
+          (x === guardCoord[0] && y === guardCoord[1]) ||
+          grid.get(x, y) === "#"
+        )
           continue;
 
-        numLoops += this.formsLoop(this.cloneGrid(grid), [x, y], guardCoord)
-          ? 1
-          : 0;
+        numLoops += this.formsLoop(grid, [x, y], guardCoord) ? 1 : 0;
+        grid.reset();
       }
     }
 
