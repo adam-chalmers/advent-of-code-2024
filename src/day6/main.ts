@@ -21,6 +21,8 @@ type WalkResult =
   | { newCoords: null; result: typeof Results.Complete }
   | { newCoords: Coord; result: typeof Results.Loop };
 
+type Visited = Record<number, Record<number, Set<Heading>>>;
+
 export class Day6 extends Day {
   protected getDir(): string {
     return __dirname;
@@ -41,29 +43,21 @@ export class Day6 extends Day {
     }
   }
 
-  private addToVisited(
-    visited: Map<number, Map<number, Set<Heading>>>,
-    coords: Coord,
-    heading: Heading
-  ) {
-    let existingX = visited.get(coords[0]);
+  private addToVisited(visited: Visited, coords: Coord, heading: Heading) {
+    let existingX = visited[coords[0]];
     if (!existingX) {
-      existingX = new Map();
-      visited.set(coords[0], existingX);
+      existingX = {};
+      visited[coords[0]] = existingX;
     }
-    let existingY = existingX.get(coords[1]);
+    let existingY = existingX[coords[1]];
     if (!existingY) {
       existingY = new Set();
-      existingX.set(coords[1], existingY);
+      existingX[coords[1]] = existingY;
     }
     existingY.add(heading);
   }
 
-  private walk(
-    grid: Grid,
-    guardCoords: Coord,
-    visited: Map<number, Map<number, Set<Heading>>>
-  ): WalkResult {
+  private walk(grid: Grid, guardCoords: Coord, visited: Visited): WalkResult {
     const heading = grid.get(guardCoords);
     let newCoords: Coord;
     if (heading === Headings.UP)
@@ -86,7 +80,7 @@ export class Day6 extends Day {
     if (charAtNewCoords === "#") {
       const newHeading = this.rotate(heading);
       grid.set(guardCoords, newHeading);
-      if (visited.get(guardCoords[0])?.get(guardCoords[1])?.has(newHeading)) {
+      if (visited[guardCoords[0]]?.[guardCoords[1]]?.has(newHeading)) {
         return { newCoords: guardCoords, result: Results.Loop };
       }
 
@@ -100,7 +94,7 @@ export class Day6 extends Day {
 
     grid.set(newCoords, heading);
 
-    if (visited.get(newCoords[0])?.get(newCoords[1])?.has(heading)) {
+    if (visited[newCoords[0]]?.[newCoords[1]]?.has(heading)) {
       return { newCoords, result: Results.Loop };
     }
 
@@ -121,20 +115,10 @@ export class Day6 extends Day {
     throw new Error("Could not find guard!");
   }
 
-  private walkUntilDone(
-    visited: Map<number, Map<number, Set<Heading>>>,
-    grid: Grid,
-    guardCoords: Coord
-  ) {
-    visited.set(
-      guardCoords[0],
-      new Map([
-        [guardCoords[1], new Set<string>([grid.get(guardCoords)])] as [
-          number,
-          Set<Heading>
-        ],
-      ])
-    );
+  private walkUntilDone(visited: Visited, grid: Grid, guardCoords: Coord) {
+    visited[guardCoords[0]] = {
+      [guardCoords[1]]: new Set([grid.get(guardCoords) as Heading]),
+    };
     let result: Result = Results.InProgress;
     while (result === Results.InProgress) {
       const walkResult = this.walk(grid, guardCoords, visited);
@@ -151,7 +135,7 @@ export class Day6 extends Day {
   private checkLoop(grid: Grid, obstacleCoord: Coord, guardCoord: Coord) {
     grid.set(obstacleCoord, "#");
 
-    const visited = new Map<number, Map<number, Set<Heading>>>();
+    const visited: Visited = {};
     return this.walkUntilDone(visited, grid, guardCoord);
   }
 
@@ -159,11 +143,11 @@ export class Day6 extends Day {
     const grid = Grid.fromInput({ input });
 
     const guardCoords = this.findGuard(grid);
-    const visited = new Map<number, Map<number, Set<Heading>>>();
+    const visited: Visited = {};
     this.walkUntilDone(visited, grid, guardCoords);
 
-    return Array.from(visited.values())
-      .reduce((acc, curr) => acc + curr.size, 0)
+    return Object.values(visited)
+      .reduce((acc, curr) => acc + Object.keys(curr).length, 0)
       .toString();
   }
 
@@ -172,27 +156,27 @@ export class Day6 extends Day {
 
     const guardCoords = this.findGuard(grid);
     const originalHeading = grid.get(guardCoords);
-    const visited = new Map<number, Map<number, Set<Heading>>>();
+    const visited: Visited = {};
     this.walkUntilDone(visited, grid, guardCoords);
     grid.reset();
 
     const loopCoords = new Set<string>();
-    for (const [x, yCoords] of visited.entries()) {
-      for (const [y, headings] of yCoords.entries()) {
+    for (const [x, yCoords] of Object.entries(visited)) {
+      for (const [y, headings] of Object.entries(yCoords)) {
         for (const heading of headings) {
           let obstacle: Coord;
           switch (heading) {
             case Headings.UP:
-              obstacle = [x, y + 1];
+              obstacle = [Number(x), Number(y) + 1];
               break;
             case Headings.DOWN:
-              obstacle = [x, y - 1];
+              obstacle = [Number(x), Number(y) - 1];
               break;
             case Headings.LEFT:
-              obstacle = [x - 1, y];
+              obstacle = [Number(x) - 1, Number(y)];
               break;
             case Headings.RIGHT:
-              obstacle = [x + 1, y];
+              obstacle = [Number(x) + 1, Number(y)];
               break;
           }
           if (
@@ -225,3 +209,5 @@ export class Day6 extends Day {
     return loopCoords.size.toString();
   }
 }
+
+new Day6().run({ example: false, part: 2 });
