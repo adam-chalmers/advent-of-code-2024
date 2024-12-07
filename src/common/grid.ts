@@ -101,4 +101,16 @@ export class Grid<T = string> {
     this.grid = this.original.map((x) => [...x]);
     return this;
   }
+
+  public toString() {
+    const mapped: string[] = [];
+    for (let y = this.grid.length - 1; y >= 0; y--) {
+      mapped.push(this.grid[y].map((x) => this.printEntry(x)).join(""));
+    }
+    return mapped.join("\n");
+  }
+
+  public print() {
+    console.log(this.toString());
+  }
 }

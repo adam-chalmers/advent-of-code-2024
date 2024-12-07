@@ -87,7 +87,7 @@ export class Day6 extends Day {
       const newHeading = this.rotate(heading);
       grid.set(guardCoords, newHeading);
       if (visited.get(guardCoords[0])?.get(guardCoords[1])?.has(newHeading)) {
-        return { newCoords, result: Results.Loop };
+        return { newCoords: guardCoords, result: Results.Loop };
       }
 
       this.addToVisited(visited, guardCoords, newHeading);
@@ -126,35 +126,39 @@ export class Day6 extends Day {
     grid: Grid,
     guardCoords: Coord
   ) {
-    // grid.print();
+    visited.set(
+      guardCoords[0],
+      new Map([
+        [guardCoords[1], new Set<string>([grid.get(guardCoords)])] as [
+          number,
+          Set<Heading>
+        ],
+      ])
+    );
     let result: Result = Results.InProgress;
     while (result === Results.InProgress) {
       const walkResult = this.walk(grid, guardCoords, visited);
       result = walkResult.result;
 
-      if (walkResult.result !== Results.InProgress) break;
-      guardCoords = walkResult.newCoords;
-      // grid.print();
+      if (walkResult.result !== Results.Complete) {
+        guardCoords = walkResult.newCoords;
+      }
     }
 
-    return result;
+    return { result, finalGuardCoords: guardCoords };
   }
 
-  private formsLoop(
-    grid: Grid,
-    obstacleCoord: Coord,
-    guardCoord: Coord
-  ): boolean {
+  private checkLoop(grid: Grid, obstacleCoord: Coord, guardCoord: Coord) {
     grid.set(obstacleCoord, "#");
 
     const visited = new Map<number, Map<number, Set<Heading>>>();
-    return this.walkUntilDone(visited, grid, guardCoord) === Results.Loop;
+    return this.walkUntilDone(visited, grid, guardCoord);
   }
 
   protected override part1(input: string): string {
     const grid = Grid.fromInput({ input });
 
-    let guardCoords = this.findGuard(grid);
+    const guardCoords = this.findGuard(grid);
     const visited = new Map<number, Map<number, Set<Heading>>>();
     this.walkUntilDone(visited, grid, guardCoords);
 
@@ -166,22 +170,58 @@ export class Day6 extends Day {
   protected override part2(input: string): string {
     const grid = Grid.fromInput({ input });
 
-    const guardCoord = this.findGuard(grid);
+    const guardCoords = this.findGuard(grid);
+    const originalHeading = grid.get(guardCoords);
+    const visited = new Map<number, Map<number, Set<Heading>>>();
+    this.walkUntilDone(visited, grid, guardCoords);
+    grid.reset();
 
-    let numLoops = 0;
-    for (let y = 0; y < grid.height; y++) {
-      for (let x = 0; x < grid.width; x++) {
-        if (
-          (x === guardCoord[0] && y === guardCoord[1]) ||
-          grid.get(x, y) === "#"
-        )
-          continue;
+    const loopCoords = new Set<string>();
+    for (const [x, yCoords] of visited.entries()) {
+      for (const [y, headings] of yCoords.entries()) {
+        for (const heading of headings) {
+          let obstacle: Coord;
+          switch (heading) {
+            case Headings.UP:
+              obstacle = [x, y + 1];
+              break;
+            case Headings.DOWN:
+              obstacle = [x, y - 1];
+              break;
+            case Headings.LEFT:
+              obstacle = [x - 1, y];
+              break;
+            case Headings.RIGHT:
+              obstacle = [x + 1, y];
+              break;
+          }
+          if (
+            obstacle[0] < 0 ||
+            obstacle[0] >= grid.width ||
+            obstacle[1] < 0 ||
+            obstacle[1] >= grid.height ||
+            (obstacle[0] === guardCoords[0] &&
+              obstacle[1] === guardCoords[1]) ||
+            grid.get(obstacle) === "#"
+          ) {
+            continue;
+          }
 
-        numLoops += this.formsLoop(grid, [x, y], guardCoord) ? 1 : 0;
-        grid.reset();
+          const { result, finalGuardCoords } = this.checkLoop(
+            grid,
+            obstacle,
+            guardCoords
+          );
+          if (result === Results.Loop) {
+            loopCoords.add(`${obstacle[0]},${obstacle[1]}`);
+          }
+          grid.set(finalGuardCoords, ".");
+          grid.set(obstacle, ".");
+          grid.set(guardCoords, originalHeading);
+        }
       }
     }
 
-    return numLoops.toString();
+    return loopCoords.size.toString();
   }
 }
