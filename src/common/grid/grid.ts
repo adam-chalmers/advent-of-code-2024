@@ -1,4 +1,4 @@
-export type Coord = [x: number, y: number];
+import { Point } from "./point";
 
 export interface GridArgs<T = string> {
   grid: T[][];
@@ -59,42 +59,42 @@ export class Grid<T = string> {
     return this.grid.map((row) => row[x]);
   }
 
-  public get(coord: Coord): T;
+  public get(point: Point): T;
   public get(x: number, y: number): T;
-  public get(x: number | Coord, y?: number): T {
+  public get(x: number | Point, y?: number): T {
     if (y !== undefined) {
       return this.grid[y][x as number];
     }
-    return this.grid[(x as Coord)[1]][(x as Coord)[0]];
+    return this.grid[(x as Point).y][(x as Point).x];
   }
 
-  public tryGet(coord: Coord): T | undefined;
+  public tryGet(point: Point): T | undefined;
   public tryGet(x: number, y: number): T | undefined;
-  public tryGet(x: number | Coord, y?: number): T | undefined {
+  public tryGet(x: number | Point, y?: number): T | undefined {
     if (y !== undefined) {
       return this.grid[y]?.[x as number];
     }
-    return this.grid[(x as Coord)[1]]?.[(x as Coord)[0]];
+    return this.grid[(x as Point).y]?.[(x as Point).x];
   }
 
-  public set(coord: Coord, value: T): void;
+  public set(point: Point, value: T): void;
   public set(x: number, y: number, value: T): void;
-  public set(x: number | Coord, y: number | T, value?: T) {
+  public set(x: number | Point, y: number | T, value?: T) {
     if (typeof x === "number") {
       this.grid[y as number][x] = value as T;
       return;
     }
 
-    this.grid[(x as Coord)[1]][(x as Coord)[0]] = y as T;
+    this.grid[(x as Point).y][(x as Point).x] = y as T;
     return this;
   }
 
-  public inBounds(coord: Coord): boolean;
+  public inBounds(point: Point): boolean;
   public inBounds(x: number, y: number): boolean;
-  public inBounds(x: number | Coord, y?: number): boolean {
+  public inBounds(x: number | Point, y?: number): boolean {
     if (y === undefined) {
-      y = (x as Coord)[1];
-      x = (x as Coord)[0];
+      y = (x as Point).y;
+      x = (x as Point).x;
     }
     return (x as number) >= 0 && (x as number) < this.width && y >= 0 && y < this.height;
   }

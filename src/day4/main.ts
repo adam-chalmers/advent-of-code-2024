@@ -1,5 +1,5 @@
 import { Day } from "../common/day";
-import { Grid } from "../common/grid";
+import { Grid } from "../common/grid/grid";
 
 export class Day4 extends Day {
   protected getDir(): string {
