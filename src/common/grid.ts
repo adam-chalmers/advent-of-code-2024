@@ -89,6 +89,16 @@ export class Grid<T = string> {
     return this;
   }
 
+  public inBounds(coord: Coord): boolean;
+  public inBounds(x: number, y: number): boolean;
+  public inBounds(x: number | Coord, y?: number): boolean {
+    if (y === undefined) {
+      y = (x as Coord)[1];
+      x = (x as Coord)[0];
+    }
+    return (x as number) >= 0 && (x as number) < this.width && y >= 0 && y < this.height;
+  }
+
   public reset() {
     this.grid = this.original.map((x) => [...x]);
     return this;
