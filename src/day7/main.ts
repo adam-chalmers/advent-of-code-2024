@@ -5,11 +5,7 @@ export class Day7 extends Day {
     return __dirname;
   }
 
-  private addMultiply(
-    target: number,
-    val: number,
-    remaining: number[]
-  ): boolean {
+  private addMultiply(target: number, val: number, remaining: number[]): boolean {
     if (remaining.length === 1) {
       if (val + remaining[0] === target || val * remaining[0] === target) {
         return true;
@@ -34,34 +30,20 @@ export class Day7 extends Day {
 
   private addMultiplyConcat(target: number, val: number, remaining: number[]) {
     if (remaining.length === 1) {
-      if (
-        val + remaining[0] === target ||
-        val * remaining[0] === target ||
-        this.concat(val, remaining[0]) === target
-      ) {
+      if (val + remaining[0] === target || val * remaining[0] === target || this.concat(val, remaining[0]) === target) {
         return true;
       }
 
       return false;
     }
 
-    if (
-      this.addMultiplyConcat(target, val + remaining[0], remaining.slice(1))
-    ) {
+    if (this.addMultiplyConcat(target, val + remaining[0], remaining.slice(1))) {
       return true;
     }
-    if (
-      this.addMultiplyConcat(target, val * remaining[0], remaining.slice(1))
-    ) {
+    if (this.addMultiplyConcat(target, val * remaining[0], remaining.slice(1))) {
       return true;
     }
-    if (
-      this.addMultiplyConcat(
-        target,
-        this.concat(val, remaining[0]),
-        remaining.slice(1)
-      )
-    ) {
+    if (this.addMultiplyConcat(target, this.concat(val, remaining[0]), remaining.slice(1))) {
       return true;
     }
 

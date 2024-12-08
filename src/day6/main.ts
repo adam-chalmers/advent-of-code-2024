@@ -60,18 +60,11 @@ export class Day6 extends Day {
   private walk(grid: Grid, guardCoords: Coord, visited: Visited): WalkResult {
     const heading = grid.get(guardCoords);
     let newCoords: Coord;
-    if (heading === Headings.UP)
-      newCoords = [guardCoords[0], guardCoords[1] + 1];
-    else if (heading === Headings.DOWN)
-      newCoords = [guardCoords[0], guardCoords[1] - 1];
-    else if (heading === Headings.LEFT)
-      newCoords = [guardCoords[0] - 1, guardCoords[1]];
-    else if (heading === Headings.RIGHT)
-      newCoords = [guardCoords[0] + 1, guardCoords[1]];
-    else
-      throw new Error(
-        `Guard is not at position! (${guardCoords[0]}, ${guardCoords[1]})`
-      );
+    if (heading === Headings.UP) newCoords = [guardCoords[0], guardCoords[1] + 1];
+    else if (heading === Headings.DOWN) newCoords = [guardCoords[0], guardCoords[1] - 1];
+    else if (heading === Headings.LEFT) newCoords = [guardCoords[0] - 1, guardCoords[1]];
+    else if (heading === Headings.RIGHT) newCoords = [guardCoords[0] + 1, guardCoords[1]];
+    else throw new Error(`Guard is not at position! (${guardCoords[0]}, ${guardCoords[1]})`);
 
     grid.set(guardCoords, ".");
     const charAtNewCoords = grid.tryGet(newCoords);
@@ -184,18 +177,13 @@ export class Day6 extends Day {
             obstacle[0] >= grid.width ||
             obstacle[1] < 0 ||
             obstacle[1] >= grid.height ||
-            (obstacle[0] === guardCoords[0] &&
-              obstacle[1] === guardCoords[1]) ||
+            (obstacle[0] === guardCoords[0] && obstacle[1] === guardCoords[1]) ||
             grid.get(obstacle) === "#"
           ) {
             continue;
           }
 
-          const { result, finalGuardCoords } = this.checkLoop(
-            grid,
-            obstacle,
-            guardCoords
-          );
+          const { result, finalGuardCoords } = this.checkLoop(grid, obstacle, guardCoords);
           if (result === Results.Loop) {
             loopCoords.add(`${obstacle[0]},${obstacle[1]}`);
           }

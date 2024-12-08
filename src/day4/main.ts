@@ -27,11 +27,7 @@ export class Day4 extends Day {
     for (const [x, y] of xCoords) {
       for (let i = -1; i <= 1; i++) {
         for (let j = -1; j <= 1; j++) {
-          if (
-            grid.tryGet(x + j, y + i) === "M" &&
-            grid.tryGet(x + j * 2, y + i * 2) === "A" &&
-            grid.tryGet(x + j * 3, y + i * 3) === "S"
-          ) {
+          if (grid.tryGet(x + j, y + i) === "M" && grid.tryGet(x + j * 2, y + i * 2) === "A" && grid.tryGet(x + j * 3, y + i * 3) === "S") {
             count++;
           }
         }
@@ -48,15 +44,11 @@ export class Day4 extends Day {
     let count = 0;
     for (const [x, y] of aCoords) {
       const isForwards =
-        (grid.tryGet(x - 1, y - 1) === "M" &&
-          grid.tryGet(x + 1, y + 1) === "S") ||
-        (grid.tryGet(x + 1, y + 1) === "M" &&
-          grid.tryGet(x - 1, y - 1) === "S");
+        (grid.tryGet(x - 1, y - 1) === "M" && grid.tryGet(x + 1, y + 1) === "S") ||
+        (grid.tryGet(x + 1, y + 1) === "M" && grid.tryGet(x - 1, y - 1) === "S");
       const isBackwards =
-        (grid.tryGet(x - 1, y + 1) === "M" &&
-          grid.tryGet(x + 1, y - 1) === "S") ||
-        (grid.tryGet(x + 1, y - 1) === "M" &&
-          grid.tryGet(x - 1, y + 1) === "S");
+        (grid.tryGet(x - 1, y + 1) === "M" && grid.tryGet(x + 1, y - 1) === "S") ||
+        (grid.tryGet(x + 1, y - 1) === "M" && grid.tryGet(x - 1, y + 1) === "S");
       if (isForwards && isBackwards) {
         count++;
       }

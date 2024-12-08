@@ -51,6 +51,8 @@ export class Day3 extends Day {
 
   // I can't believe I've done this
   private part2_cursed(input: string): string {
-    return [...input.matchAll(/(?<=(?:^|do\(\))(?:(?!don't\(\)).)*?)mul\((\d{1,3}),(\d{1,3})\)/gs)].reduce((acc, curr) => acc + Number.parseInt(curr[1]) * Number.parseInt(curr[2]), 0).toString();
+    return [...input.matchAll(/(?<=(?:^|do\(\))(?:(?!don't\(\)).)*?)mul\((\d{1,3}),(\d{1,3})\)/gs)]
+      .reduce((acc, curr) => acc + Number.parseInt(curr[1]) * Number.parseInt(curr[2]), 0)
+      .toString();
   }
 }

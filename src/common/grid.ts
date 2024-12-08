@@ -9,8 +9,7 @@ export interface MappedGridArgs<T> extends GridArgs<T> {
   parse: (x: string) => T;
 }
 
-const DEFAULT_PRINT_ENTRY = (x: unknown): string =>
-  x == null ? "" : x.toString();
+const DEFAULT_PRINT_ENTRY = (x: unknown): string => (x == null ? "" : x.toString());
 
 export class Grid<T = string> {
   private readonly original: readonly (readonly T[])[];
@@ -30,10 +29,7 @@ export class Grid<T = string> {
     this.width = grid[0].length;
   }
 
-  public static fromInput(args: {
-    input: string;
-    printEntry?: (x: string) => string;
-  }) {
+  public static fromInput(args: { input: string; printEntry?: (x: string) => string }) {
     const { input, printEntry } = args;
     return new Grid({
       grid: input
@@ -44,11 +40,7 @@ export class Grid<T = string> {
     });
   }
 
-  public static fromInputMapped<T>(args: {
-    input: string;
-    parse: (x: string) => T;
-    printEntry?: GridArgs<T>["printEntry"];
-  }): Grid<T> {
+  public static fromInputMapped<T>(args: { input: string; parse: (x: string) => T; printEntry?: GridArgs<T>["printEntry"] }): Grid<T> {
     const { input, parse, printEntry } = args;
     return new Grid<T>({
       grid: input

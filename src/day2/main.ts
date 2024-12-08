@@ -7,9 +7,7 @@ export class Day2 extends Day {
 
   private parseInput(input: string) {
     const lines = input.split("\n");
-    const reports = lines.map((x) =>
-      x.split(" ").map((y) => Number.parseInt(y))
-    );
+    const reports = lines.map((x) => x.split(" ").map((y) => Number.parseInt(y)));
     return reports;
   }
 
