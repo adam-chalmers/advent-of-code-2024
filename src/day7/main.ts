@@ -5,45 +5,26 @@ export class Day7 extends Day {
     return __dirname;
   }
 
-  private addMultiply(target: number, val: number, remaining: number[]): boolean {
-    if (remaining.length === 1) {
-      if (val + remaining[0] === target || val * remaining[0] === target) {
-        return true;
-      }
-
-      return false;
-    }
-
-    if (this.addMultiply(target, val + remaining[0], remaining.slice(1))) {
-      return true;
-    }
-    if (this.addMultiply(target, val * remaining[0], remaining.slice(1))) {
-      return true;
-    }
-
-    return false;
-  }
-
   private concat(a: number, b: number): number {
     return Number.parseInt(a.toString() + b.toString());
   }
 
-  private addMultiplyConcat(target: number, val: number, remaining: number[]) {
+  private testCombinations(target: number, val: number, remaining: number[], concat: boolean): boolean {
     if (remaining.length === 1) {
-      if (val + remaining[0] === target || val * remaining[0] === target || this.concat(val, remaining[0]) === target) {
+      if (val + remaining[0] === target || val * remaining[0] === target || (concat && this.concat(val, remaining[0]) === target)) {
         return true;
       }
 
       return false;
     }
 
-    if (this.addMultiplyConcat(target, val + remaining[0], remaining.slice(1))) {
+    if (this.testCombinations(target, val + remaining[0], remaining.slice(1), concat)) {
       return true;
     }
-    if (this.addMultiplyConcat(target, val * remaining[0], remaining.slice(1))) {
+    if (this.testCombinations(target, val * remaining[0], remaining.slice(1), concat)) {
       return true;
     }
-    if (this.addMultiplyConcat(target, this.concat(val, remaining[0]), remaining.slice(1))) {
+    if (concat && this.testCombinations(target, this.concat(val, remaining[0]), remaining.slice(1), concat)) {
       return true;
     }
 
@@ -57,7 +38,7 @@ export class Day7 extends Day {
       const [targetStr, components] = line.split(": ");
       const target = Number.parseInt(targetStr);
       const numbers = components.split(" ").map((x) => Number.parseInt(x));
-      if (this.addMultiply(target, numbers[0], numbers.slice(1))) {
+      if (this.testCombinations(target, numbers[0], numbers.slice(1), false)) {
         sum += target;
       }
     }
@@ -72,9 +53,9 @@ export class Day7 extends Day {
       const [targetStr, components] = line.split(": ");
       const target = Number.parseInt(targetStr);
       const numbers = components.split(" ").map((x) => Number.parseInt(x));
-      if (this.addMultiply(target, numbers[0], numbers.slice(1))) {
+      if (this.testCombinations(target, numbers[0], numbers.slice(1), false)) {
         sum += target;
-      } else if (this.addMultiplyConcat(target, numbers[0], numbers.slice(1))) {
+      } else if (this.testCombinations(target, numbers[0], numbers.slice(1), true)) {
         sum += target;
       }
     }
