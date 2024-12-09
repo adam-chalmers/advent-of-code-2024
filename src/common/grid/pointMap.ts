@@ -1,11 +1,10 @@
 import { Point } from "./point";
 
 export class PointMap<T> implements Map<Point, T> {
-  private readonly pointMap: Map<number, Map<number, T>>;
+  private readonly pointMap: Map<string, { point: Point; value: T }>;
 
   public constructor(pairs?: [Point, T][]) {
     this.pointMap = new Map();
-    this._size = 0;
     if (!pairs) return;
 
     for (const [point, value] of pairs) {
@@ -18,57 +17,84 @@ export class PointMap<T> implements Map<Point, T> {
   }
 
   public delete(key: Point): boolean {
-    const yMap = this.pointMap.get(key.x);
-    if (!yMap) return false;
-
-    const wasDeleted = yMap.delete(key.y);
-    if (wasDeleted) {
-      this._size--;
-    }
-    return wasDeleted;
+    return this.pointMap.delete(`${key.x}-${key.y}`);
   }
 
   public forEach(callbackfn: (value: T, key: Point, map: Map<Point, T>) => void, thisArg?: any): void {
-    throw new Error("Method not implemented.");
+    for (const [key, value] of this.entries()) {
+      callbackfn(value, key, this);
+    }
   }
 
   public get(key: Point): T | undefined {
-    return this.pointMap.get(key.x)?.get(key.y);
+    return this.pointMap.get(`${key.x}-${key.y}`)?.value;
   }
 
   public has(key: Point): boolean {
-    return this.pointMap.get(key.x)?.has(key.y) ?? false;
+    return this.pointMap.has(`${key.x}-${key.y}`);
   }
 
   public set(key: Point, value: T): this {
-    let yMap = this.pointMap.get(key.x);
-    if (!yMap) {
-      yMap = new Map();
-      this.pointMap.set(key.x, yMap);
-    }
-
-    if (!yMap.has(key.x)) {
-      this._size++;
-    }
-    yMap.set(key.y, value);
+    this.pointMap.set(`${key.x}-${key.y}`, { point: key, value });
     return this;
   }
 
-  private _size: number;
   public get size(): number {
-    return this._size;
+    return this.pointMap.size;
   }
 
-  entries(): MapIterator<[Point, T]> {
-    throw new Error("Method not implemented.");
+  public entries(): MapIterator<[Point, T]> {
+    const iter = this.pointMap.values();
+    return {
+      [Symbol.iterator]() {
+        return this;
+      },
+      next: () => {
+        const result = iter.next();
+        if (result.done) {
+          return { done: true, value: undefined };
+        }
+
+        const { point, value } = result.value;
+        return { done: false, value: [point, value] };
+      },
+    };
   }
 
-  keys(): MapIterator<Point> {
-    throw new Error("Method not implemented.");
+  public keys(): MapIterator<Point> {
+    const iter = this.pointMap.values();
+    return {
+      [Symbol.iterator]() {
+        return this;
+      },
+      next: () => {
+        const result = iter.next();
+        if (result.done) {
+          return { done: true, value: undefined };
+        }
+
+        const { point } = result.value;
+        return { done: false, value: point };
+      },
+    };
   }
 
-  values(): MapIterator<T> {
-    throw new Error("Method not implemented.");
+  public values(): MapIterator<T> {
+    const iter = this.pointMap.values();
+    return {
+      [Symbol.iterator]() {
+        return this;
+      },
+      next: () => {
+        const result = iter.next();
+        if (result.done) {
+          return { done: true, value: undefined };
+        }
+
+        const { value } = result.value;
+        return { done: false, value };
+      },
+    };
   }
 
   [Symbol.iterator](): MapIterator<[Point, T]> {
@@ -76,4 +102,15 @@ export class PointMap<T> implements Map<Point, T> {
   }
 
   [Symbol.toStringTag] = "PointMap";
+
+  public ensure(point: Point, ifNotExists: () => T): T {
+    let existing = this.pointMap.get(`${point.x}-${point.y}`);
+    if (existing !== undefined) {
+      return existing.value;
+    }
+
+    existing = { point, value: ifNotExists() };
+    this.pointMap.set(`${point.x}-${point.y}`, existing);
+    return existing.value;
+  }
 }
