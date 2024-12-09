@@ -63,15 +63,12 @@ const runDirectly = async (args: { part: number; example: boolean; filePath: str
   new DayClass().run({ example, part });
 };
 
-const main = async () => {
-  const { day, part, example, debug } = await parser.parse();
-  if (!debug) {
-    const { filePath, className } = getDay(day);
-    await runDirectly({ part, example, filePath, className });
-    return;
+const runWithDebug = (args: { day?: number; part: number; example: boolean }) => {
+  const { day, part, example } = args;
+  let command = `node --inspect -r @swc-node/register ./src/runDay.ts -p ${part}`;
+  if (day) {
+    command += ` -d ${day}`;
   }
-
-  let command = `node ${debug ? "--inspect" : ""} -r @swc-node/register ./src/runDay.ts -p ${part}`;
   if (example) {
     command += " --example";
   }
@@ -84,6 +81,17 @@ const main = async () => {
   } catch (err) {
     console.error(err);
   }
+};
+
+const main = async () => {
+  const { day, part, example, debug } = await parser.parse();
+  if (debug) {
+    runWithDebug({ day, part, example });
+    return;
+  }
+
+  const { filePath, className } = getDay(day);
+  await runDirectly({ part, example, filePath, className });
 };
 
 main();
