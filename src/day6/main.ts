@@ -1,6 +1,7 @@
 import { Day } from "../common/day";
 import { Grid } from "../common/grid/grid";
 import { Point } from "../common/grid/point";
+import { PointMap } from "../common/grid/pointMap";
 import { PointSet } from "../common/grid/pointSet";
 
 const Headings = {
@@ -23,7 +24,7 @@ type WalkResult =
   | { newCoords: null; result: typeof Results.Complete }
   | { newCoords: Point; result: typeof Results.Loop };
 
-type Visited = Record<number, Record<number, Set<Heading>>>;
+type Visited = PointMap<Set<Heading>>;
 
 export class Day6 extends Day {
   protected getDir(): string {
@@ -46,17 +47,8 @@ export class Day6 extends Day {
   }
 
   private addToVisited(visited: Visited, coords: Point, heading: Heading) {
-    let existingX = visited[coords.x];
-    if (!existingX) {
-      existingX = {};
-      visited[coords.x] = existingX;
-    }
-    let existingY = existingX[coords.y];
-    if (!existingY) {
-      existingY = new Set();
-      existingX[coords.y] = existingY;
-    }
-    existingY.add(heading);
+    visited.ensure(coords, () => new Set());
+    visited.get(coords)!.add(heading);
   }
 
   private walk(grid: Grid, guardCoords: Point, visited: Visited): WalkResult {
@@ -75,7 +67,7 @@ export class Day6 extends Day {
     if (charAtNewCoords === "#") {
       const newHeading = this.rotate(heading);
       grid.set(guardCoords, newHeading);
-      if (visited[guardCoords.x]?.[guardCoords.y]?.has(newHeading)) {
+      if (visited.get(guardCoords)?.has(newHeading)) {
         return { newCoords: guardCoords, result: Results.Loop };
       }
 
@@ -89,7 +81,7 @@ export class Day6 extends Day {
 
     grid.set(newCoords, heading);
 
-    if (visited[newCoords.x]?.[newCoords.y]?.has(heading)) {
+    if (visited.get(newCoords)?.has(heading)) {
       return { newCoords, result: Results.Loop };
     }
 
@@ -111,9 +103,7 @@ export class Day6 extends Day {
   }
 
   private walkUntilDone(visited: Visited, grid: Grid, guardCoords: Point) {
-    visited[guardCoords.x] = {
-      [guardCoords.y]: new Set([grid.get(guardCoords) as Heading]),
-    };
+    visited.set(guardCoords, new Set([grid.get(guardCoords) as Heading]));
     let result: Result = Results.InProgress;
     while (result === Results.InProgress) {
       const walkResult = this.walk(grid, guardCoords, visited);
@@ -130,7 +120,7 @@ export class Day6 extends Day {
   private checkLoop(grid: Grid, obstacleCoord: Point, guardCoord: Point) {
     grid.set(obstacleCoord, "#");
 
-    const visited: Visited = {};
+    const visited = new PointMap<Set<Heading>>();
     return this.walkUntilDone(visited, grid, guardCoord);
   }
 
@@ -138,12 +128,10 @@ export class Day6 extends Day {
     const grid = Grid.fromInput({ input });
 
     const guardCoords = this.findGuard(grid);
-    const visited: Visited = {};
+    const visited = new PointMap<Set<Heading>>();
     this.walkUntilDone(visited, grid, guardCoords);
 
-    return Object.values(visited)
-      .reduce((acc, curr) => acc + Object.keys(curr).length, 0)
-      .toString();
+    return visited.size.toString();
   }
 
   protected override part2(input: string): string {
@@ -151,41 +139,39 @@ export class Day6 extends Day {
 
     const guardCoords = this.findGuard(grid);
     const originalHeading = grid.get(guardCoords);
-    const visited: Visited = {};
+    const visited = new PointMap<Set<Heading>>();
     this.walkUntilDone(visited, grid, guardCoords);
     grid.reset();
 
     const loopCoords = new PointSet();
-    for (const [x, yCoords] of Object.entries(visited)) {
-      for (const [y, headings] of Object.entries(yCoords)) {
-        for (const heading of headings) {
-          let obstacle: Point;
-          switch (heading) {
-            case Headings.UP:
-              obstacle = new Point(Number(x), Number(y) + 1);
-              break;
-            case Headings.DOWN:
-              obstacle = new Point(Number(x), Number(y) - 1);
-              break;
-            case Headings.LEFT:
-              obstacle = new Point(Number(x) - 1, Number(y));
-              break;
-            case Headings.RIGHT:
-              obstacle = new Point(Number(x) + 1, Number(y));
-              break;
-          }
-          if (!grid.inBounds(obstacle) || obstacle.equals(guardCoords) || grid.get(obstacle) === "#") {
-            continue;
-          }
-
-          const { result, finalGuardCoords } = this.checkLoop(grid, obstacle, guardCoords);
-          if (result === Results.Loop) {
-            loopCoords.add(obstacle);
-          }
-          grid.set(finalGuardCoords, ".");
-          grid.set(obstacle, ".");
-          grid.set(guardCoords, originalHeading);
+    for (const [coords, headings] of visited.entries()) {
+      for (const heading of headings) {
+        let obstacle: Point;
+        switch (heading) {
+          case Headings.UP:
+            obstacle = new Point(coords.x, coords.y + 1);
+            break;
+          case Headings.DOWN:
+            obstacle = new Point(coords.x, coords.y - 1);
+            break;
+          case Headings.LEFT:
+            obstacle = new Point(coords.x - 1, coords.y);
+            break;
+          case Headings.RIGHT:
+            obstacle = new Point(coords.x + 1, coords.y);
+            break;
         }
+        if (!grid.inBounds(obstacle) || obstacle.equals(guardCoords) || grid.get(obstacle) === "#") {
+          continue;
+        }
+
+        const { result, finalGuardCoords } = this.checkLoop(grid, obstacle, guardCoords);
+        if (result === Results.Loop) {
+          loopCoords.add(obstacle);
+        }
+        grid.set(finalGuardCoords, ".");
+        grid.set(obstacle, ".");
+        grid.set(guardCoords, originalHeading);
       }
     }
 
