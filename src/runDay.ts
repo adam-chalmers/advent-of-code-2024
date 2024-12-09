@@ -49,11 +49,29 @@ const getDay = (day?: number) => {
   };
 };
 
+const runDirectly = async (args: { part: number; example: boolean; filePath: string; className: string }) => {
+  const { part, example, filePath, className } = args;
+  if (part !== 1 && part !== 2) {
+    console.error(`Invalid part entered: ${part}`);
+    process.exitCode = 1;
+    return;
+  }
+
+  const imported = await import(filePath);
+  const DayClass = imported[className] as new () => Day;
+
+  new DayClass().run({ example, part });
+};
+
 const main = async () => {
   const { day, part, example, debug } = await parser.parse();
+  if (!debug) {
+    const { filePath, className } = getDay(day);
+    await runDirectly({ part, example, filePath, className });
+    return;
+  }
 
-  const { filePath, className } = getDay(day);
-  let command = `node ${debug ? "--inspect" : ""} -r @swc-node/register ./src/dummy.ts -p ${part} -f ${filePath} -c ${className}`;
+  let command = `node ${debug ? "--inspect" : ""} -r @swc-node/register ./src/runDay.ts -p ${part}`;
   if (example) {
     command += " --example";
   }
