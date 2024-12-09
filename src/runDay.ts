@@ -4,6 +4,7 @@ import { getDayNumber } from "./common/utils";
 import { Day } from "./common/day";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+import { exec } from "node:child_process";
 
 const parser = yargs(hideBin(process.argv))
   .option("part", {
@@ -23,15 +24,15 @@ const parser = yargs(hideBin(process.argv))
   .option("example", {
     boolean: true,
     default: false,
+  })
+  .option("debug", {
+    boolean: true,
+    default: false,
   });
 
 const getDay = (day?: number) => {
   const src = __dirname;
-  const folders = fs
-    .readdirSync(src)
-    .filter(
-      (x) => x.startsWith("day") && fs.statSync(path.join(src, x)).isDirectory()
-    );
+  const folders = fs.readdirSync(src).filter((x) => x.startsWith("day") && fs.statSync(path.join(src, x)).isDirectory());
 
   const dayNumber = day ?? getDayNumber();
   if (folders.find((x) => x === `day${dayNumber}`)) {
@@ -41,9 +42,7 @@ const getDay = (day?: number) => {
     };
   }
 
-  const latestDay = Math.max(
-    ...folders.map((x) => Number.parseInt(x.slice(3)))
-  );
+  const latestDay = Math.max(...folders.map((x) => Number.parseInt(x.slice(3))));
   return {
     filePath: path.join(src, `day${latestDay}/main.ts`),
     className: `Day{latestDay}`,
@@ -51,18 +50,22 @@ const getDay = (day?: number) => {
 };
 
 const main = async () => {
-  const { example, part, day } = await parser.parse();
-  if (part !== 1 && part !== 2) {
-    console.error(`Invalid part entered: ${part}`);
-    process.exitCode = 1;
-    return;
-  }
+  const { day, part, example, debug } = await parser.parse();
 
   const { filePath, className } = getDay(day);
-  const imported = await import(filePath);
-  const DayClass = imported[className] as new () => Day;
-
-  new DayClass().run({ example, part });
+  let command = `node ${debug ? "--inspect" : ""} -r @swc-node/register ./src/dummy.ts -p ${part} -f ${filePath} -c ${className}`;
+  if (example) {
+    command += " --example";
+  }
+  try {
+    exec(command, (err, stdout, stderr) => {
+      if (err) console.error(err);
+      if (stderr) console.error(stderr);
+      if (stdout) console.log(stdout);
+    });
+  } catch (err) {
+    console.error(err);
+  }
 };
 
 main();
