@@ -130,8 +130,9 @@ export class Grid<T = string> {
           return { done: true, value: undefined };
         }
 
+        const value = { value: this.grid[y][x], point: new Point(x, y) };
         x++;
-        return { done: false, value: { value: this.grid[y][x], point: new Point(x, y) } };
+        return { done: false, value };
       },
     };
   }
