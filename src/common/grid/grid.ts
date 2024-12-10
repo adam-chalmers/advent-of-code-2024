@@ -115,4 +115,24 @@ export class Grid<T = string> {
   public print() {
     console.log(this.toString());
   }
+
+  public [Symbol.iterator](): Iterator<{ value: T; point: Point }> {
+    let y = 0;
+    let x = 0;
+
+    return {
+      next: () => {
+        if (x >= this.width) {
+          x = 0;
+          y++;
+        }
+        if (y >= this.height) {
+          return { done: true, value: undefined };
+        }
+
+        x++;
+        return { done: false, value: { value: this.grid[y][x], point: new Point(x, y) } };
+      },
+    };
+  }
 }
