@@ -21,10 +21,10 @@ export class Day11 extends Day {
     } else {
       const str = stone.toString();
       if (str.length % 2 === 0) {
-        const foo = Math.pow(10, str.length / 2);
-        const firstHalf = Math.floor(stone / foo);
+        const factor = Math.pow(10, str.length / 2);
+        const firstHalf = Math.floor(stone / factor);
         newStones.push(firstHalf);
-        newStones.push(stone - firstHalf * foo);
+        newStones.push(stone - firstHalf * factor);
       } else {
         newStones.push(stone * 2024);
       }
