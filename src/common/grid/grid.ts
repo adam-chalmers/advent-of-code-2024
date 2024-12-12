@@ -99,6 +99,14 @@ export class Grid<T = string> {
     return (x as number) >= 0 && (x as number) < this.width && y >= 0 && y < this.height;
   }
 
+  public allNeighbours(point: Point) {
+    return [point.up(), point.right(), point.down(), point.left()];
+  }
+
+  public realNeighbours(point: Point) {
+    return this.allNeighbours(point).filter((x) => this.inBounds(x));
+  }
+
   public reset() {
     this.grid = this.original.map((x) => [...x]);
     return this;
