@@ -51,6 +51,30 @@ export class Grid<T = string> {
     });
   }
 
+  public static fromDimensions<T>(args: {
+    height: number;
+    width: number;
+    default: { value: T } | (() => T);
+    printEntry?: GridArgs<T>["printEntry"];
+  }): Grid<T> {
+    const grid = new Array<T[]>(args.height);
+    for (let y = 0; y < args.height; y++) {
+      let getDefault: () => T;
+      if (typeof args.default === "function") {
+        getDefault = args.default;
+      } else {
+        getDefault = () => (args.default as { value: T }).value;
+      }
+
+      grid[y] = new Array<T>(args.width);
+      for (let x = 0; x < args.width; x++) {
+        grid[y][x] = getDefault();
+      }
+    }
+
+    return new Grid({ grid, printEntry: args.printEntry });
+  }
+
   public getRow(y: number) {
     return this.grid[y];
   }
